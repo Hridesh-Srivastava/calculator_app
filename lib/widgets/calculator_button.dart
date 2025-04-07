@@ -21,47 +21,48 @@ class CalculatorButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    return Expanded(
-      flex: flex,
-      child: Padding(
-        padding: const EdgeInsets.all(4.0),
-        child: ElevatedButton(
-          onPressed: onPressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: color ?? (isDarkMode ? Colors.grey.shade800 : Colors.white),
-            foregroundColor: textColor ?? (isDarkMode ? Colors.white : Colors.black),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            padding: const EdgeInsets.all(16),
-            elevation: 4,
-          ),
-          child: _buildButtonContent(text),
+    return Material(
+      color: color ?? (isDarkMode ? Colors.grey.shade800 : Colors.white),
+      borderRadius: BorderRadius.circular(12),
+      elevation: 2,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          alignment: Alignment.center,
+          child: _buildButtonText(),
         ),
       ),
     );
   }
 
-  Widget _buildButtonContent(String text) {
+  Widget _buildButtonText() {
     // For special mathematical notations, use Math widget
     if (text == 'x²') {
-      return Math.tex(r'x^2', textStyle: const TextStyle(fontSize: 20));
+      return Math.tex(r'x^2', textStyle: const TextStyle(fontSize: 18));
     } else if (text == 'x³') {
-      return Math.tex(r'x^3', textStyle: const TextStyle(fontSize: 20));
+      return Math.tex(r'x^3', textStyle: const TextStyle(fontSize: 18));
     } else if (text == 'e^x') {
-      return Math.tex(r'e^x', textStyle: const TextStyle(fontSize: 20));
+      return Math.tex(r'e^x', textStyle: const TextStyle(fontSize: 18));
     } else if (text == '1/x') {
-      return Math.tex(r'\frac{1}{x}', textStyle: const TextStyle(fontSize: 20));
+      return Math.tex(r'\frac{1}{x}', textStyle: const TextStyle(fontSize: 18));
     } else if (text == 'x!') {
-      return Math.tex(r'x!', textStyle: const TextStyle(fontSize: 20));
+      return Math.tex(r'x!', textStyle: const TextStyle(fontSize: 18));
     } else if (text == 'π') {
-      return Math.tex(r'\pi', textStyle: const TextStyle(fontSize: 20));
+      return Math.tex(r'\pi', textStyle: const TextStyle(fontSize: 18));
     } else if (text == 'sqrt') {
-      return Math.tex(r'\sqrt{x}', textStyle: const TextStyle(fontSize: 20));
+      return Math.tex(r'\sqrt{x}', textStyle: const TextStyle(fontSize: 18));
     } else {
       return Text(
         text,
-        style: const TextStyle(fontSize: 20),
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: textColor,
+        ),
+        textAlign: TextAlign.center,
       );
     }
   }

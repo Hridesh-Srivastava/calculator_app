@@ -40,8 +40,13 @@ class CalculatorProvider extends ChangeNotifier {
       }
     } catch (e) {
       // If there's an error, try shared preferences as fallback
-      final prefs = await SharedPreferences.getInstance();
-      _history = prefs.getStringList('history') ?? [];
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        _history = prefs.getStringList('history') ?? [];
+      } catch (e) {
+        // If all fails, start with empty history
+        _history = [];
+      }
     }
     notifyListeners();
   }
@@ -58,8 +63,13 @@ class CalculatorProvider extends ChangeNotifier {
       await prefs.setStringList('history', _history);
     } catch (e) {
       // If there's an error, try shared preferences as fallback
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList('history', _history);
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setStringList('history', _history);
+      } catch (e) {
+        // If all fails, log the error (in a real app, you'd want to handle this better)
+        debugPrint('Error saving history: $e');
+      }
     }
   }
 
@@ -129,7 +139,7 @@ class CalculatorProvider extends ChangeNotifier {
   }
 
   bool _isOperator(String value) {
-    return value == '+' || value == '-' || value == '×' || value == '÷' || value == '%' || value == 'mod';
+    return value == '+' || value == '-' || value == '×' || value == '÷' || value == '%' || value == 'mod' || value == '^';
   }
 
   void clear() {
@@ -181,6 +191,9 @@ class CalculatorProvider extends ChangeNotifier {
     expression = _replaceTrigFunctions(expression, 'sin');
     expression = _replaceTrigFunctions(expression, 'cos');
     expression = _replaceTrigFunctions(expression, 'tan');
+    expression = _replaceTrigFunctions(expression, 'sinh');
+    expression = _replaceTrigFunctions(expression, 'cosh');
+    expression = _replaceTrigFunctions(expression, 'tanh');
 
     // Handle log and ln
     RegExp logRegex = RegExp(r'log$$([^)]+)$$');
@@ -197,6 +210,12 @@ class CalculatorProvider extends ChangeNotifier {
     RegExp sqrtRegex = RegExp(r'sqrt$$([^)]+)$$');
     expression = expression.replaceAllMapped(sqrtRegex, (match) {
       return 'sqrt(${match.group(1)})';
+    });
+
+    // Handle abs
+    RegExp absRegex = RegExp(r'abs$$([^)]+)$$');
+    expression = expression.replaceAllMapped(absRegex, (match) {
+      return 'abs(${match.group(1)})';
     });
 
     // Handle x^2 and x^3
@@ -229,6 +248,12 @@ class CalculatorProvider extends ChangeNotifier {
       return '(1/${match.group(1)})';
     });
 
+    // Handle XOR (^) operator - convert to pow function
+    RegExp xorRegex = RegExp(r'([0-9.]+)\^([0-9.]+)');
+    expression = expression.replaceAllMapped(xorRegex, (match) {
+      return 'pow(${match.group(1)}, ${match.group(2)})';
+    });
+
     return expression;
   }
 
@@ -238,11 +263,11 @@ class CalculatorProvider extends ChangeNotifier {
   }
 
   String _replaceTrigFunctions(String expression, String funcName) {
-    RegExp regex = RegExp('$funcName' r'\$([^)]+)\$');
+    RegExp regex = RegExp('$funcName' r'$$([^)]+)$$');
     return expression.replaceAllMapped(regex, (match) {
       try {
         double value = double.parse(match.group(1)!);
-        if (!_isRadianMode) {
+        if (!_isRadianMode && (funcName == 'sin' || funcName == 'cos' || funcName == 'tan')) {
           value = value * math.pi / 180; // Convert to radians
         }
         return '$funcName($value)';
